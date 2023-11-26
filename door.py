@@ -1,17 +1,25 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
+import markdown
+import os
 
 app = Flask(__name__)
 
-# 블로그 글 데이터 (예시)
-blog_posts = [
-    {"title": "첫 번째 포스트", "content": "안녕하세요, 첫 번째 블로그 포스트입니다!"},
-    {"title": "두 번째 포스트", "content": "두 번째 글을 쓰는 중입니다."},
-    # 추가적인 글은 필요에 따라 계속해서 추가할 수 있습니다.
-]
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        user_input = request.form['user_input']
+        markdown_text = convert_to_markdown(user_input)
+        save_to_file(markdown_text)
+        return render_template('result.html', markdown_text=markdown_text)
+    return render_template('index.html')
 
-@app.route('/')
-def home():
-    return render_template('index.html', posts=blog_posts)
+def convert_to_markdown(text):
+    return markdown.markdown(text)
+
+def save_to_file(text):
+    with open('docs/index.html', 'w', encoding='utf-8') as file:
+        file.write(f'<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Published Page</title></head><body>{text}</body></html>')
 
 if __name__ == '__main__':
+    os.makedirs('docs', exist_ok=True)
     app.run(debug=True)
